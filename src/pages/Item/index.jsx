@@ -1,9 +1,14 @@
-import { message, Modal, Table } from "antd";
+import { Card, Col, Input, message, Modal, Row, Table } from "antd";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import ModalEditor from "./ModalEditor";
+
+const initSearch = {
+	item_name: "",
+	category_name: "",
+};
 
 const Item = () => {
 	const [data, setData] = useState([]);
@@ -11,6 +16,7 @@ const Item = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState([]);
 	const [modalError, setModalError] = useState(false);
+	const [search, setSearch] = useState(initSearch);
 	const [editor, setEditor] = useState({
 		id: 0,
 		item_name: "",
@@ -18,11 +24,12 @@ const Item = () => {
 		category_id: 0,
 	});
 
-	const getData = async () => {
+	const getData = async (filter) => {
 		try {
 			setLoading(true);
 			const resp = await axios.get(
-				process.env.REACT_APP_SERVER_URL + "/api/v1.0/item/"
+				process.env.REACT_APP_SERVER_URL +
+					`/api/v1.0/item?item_name=${filter.item_name}&category_name=${filter.category_name}`
 			);
 			setLoading(false);
 			setData(resp.data.data.rows);
@@ -38,7 +45,7 @@ const Item = () => {
 				process.env.REACT_APP_SERVER_URL + "/api/v1.0/item/" + id
 			);
 			if (resp) {
-				getData();
+				getData(initSearch);
 				success(resp.data.meta.message);
 			}
 		} catch (error) {
@@ -47,8 +54,29 @@ const Item = () => {
 	};
 
 	useEffect(() => {
-		getData();
+		getData(initSearch);
 	}, []);
+
+	const handleChangeSearch = (e) => {
+		const key = e.target ? e.target.name : e.name;
+		const value = e.target ? e.target.value : e.value;
+
+		setSearch({
+			...search,
+			[key]: value,
+		});
+	};
+
+	const handleSearch =
+		(isSearch = false) =>
+		() => {
+			if (isSearch) {
+				getData(search);
+			} else {
+				setSearch(initSearch);
+				getData(initSearch);
+			}
+		};
 
 	function showDeleteConfirm(id) {
 		Modal.confirm({
@@ -132,7 +160,7 @@ const Item = () => {
 			<ModalEditor
 				isOpen={openModal}
 				onClose={() => setOpenModal(false)}
-				refresh={() => getData()}
+				refresh={() => getData(initSearch)}
 				success={success}
 				editor={editor}
 				setEditor={setEditor}
@@ -150,8 +178,55 @@ const Item = () => {
 						</button>
 					</div>
 					<hr className="my-4" />
-
-					<div className="mt-1 overflow-x-auto">
+					<Card>
+						<Row>
+							<Col span={12} className="border-r">
+								<Row className="items-center mb-4">
+									<Col span="6">
+										<span>Item Name</span>
+									</Col>
+									<Col span={12}>
+										<Input
+											placeholder="Search item name"
+											name="item_name"
+											onChange={handleChangeSearch}
+											value={search.item_name}
+										/>
+									</Col>
+								</Row>
+								<Row className="items-center">
+									<Col span="6">
+										<span>Category Name</span>
+									</Col>
+									<Col span={12}>
+										<Input
+											placeholder="Search category name"
+											name="category_name"
+											onChange={handleChangeSearch}
+											value={search.category_name}
+										/>
+									</Col>
+								</Row>
+							</Col>
+							<Col span={12}>
+								<div className="flex justify-end">
+									<button
+										className="btn btn-error btn-outline"
+										onClick={handleSearch(false)}
+									>
+										Reset
+									</button>
+									<button
+										className="ml-2 btn btn-success btn-outline"
+										onClick={handleSearch(true)}
+									>
+										Search
+									</button>
+								</div>
+							</Col>
+						</Row>
+					</Card>
+					<div className="mt-4 overflow-x-auto">
 						<Table
 							dataSource={data || []}
 							columns={columns}

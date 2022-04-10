@@ -1,10 +1,14 @@
-import { message, Modal, Table } from "antd";
+import { Card, Col, Input, message, Modal, Row, Table } from "antd";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaSearch, faClose } from "react-icons/fa";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import ModalEditor from "./ModalEditor";
 import ModalError from "../../components/Sidebar/ModalError";
+
+const initSearch = {
+	category_name: "",
+};
 
 const ItemCategory = () => {
 	const [data, setData] = useState([]);
@@ -12,16 +16,18 @@ const ItemCategory = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState([]);
 	const [modalError, setModalError] = useState(false);
+	const [search, setSearch] = useState(initSearch);
 	const [editor, setEditor] = useState({
 		id: 0,
 		category_name: "",
 	});
 
-	const getData = async () => {
+	const getData = async (filter) => {
 		try {
 			setLoading(true);
 			const resp = await axios.get(
-				process.env.REACT_APP_SERVER_URL + "/api/v1.0/item-category/"
+				process.env.REACT_APP_SERVER_URL +
+					`/api/v1.0/item-category?category_name=${filter.category_name}`
 			);
 			setLoading(false);
 			setData(resp.data.data.rows);
@@ -31,13 +37,17 @@ const ItemCategory = () => {
 		}
 	};
 
+	useEffect(() => {
+		getData(initSearch);
+	}, []);
+
 	const handleDelete = async (id) => {
 		try {
 			const resp = await axios.delete(
 				process.env.REACT_APP_SERVER_URL + "/api/v1.0/item-category/" + id
 			);
 			if (resp) {
-				getData();
+				getData(initSearch);
 				success(resp.data.meta.message);
 			}
 		} catch (error) {
@@ -45,9 +55,26 @@ const ItemCategory = () => {
 		}
 	};
 
-	useEffect(() => {
-		getData();
-	}, []);
+	const handleChangeSearch = (e) => {
+		const key = e.target ? e.target.name : e.name;
+		const value = e.target ? e.target.value : e.value;
+
+		setSearch({
+			...search,
+			[key]: value,
+		});
+	};
+
+	const handleSearch =
+		(isSearch = false) =>
+		() => {
+			if (isSearch) {
+				getData(search);
+			} else {
+				setSearch(initSearch);
+				getData(initSearch);
+			}
+		};
 
 	function showDeleteConfirm(id) {
 		Modal.confirm({
@@ -119,7 +146,7 @@ const ItemCategory = () => {
 			<ModalEditor
 				isOpen={openModal}
 				onClose={() => setOpenModal(false)}
-				refresh={() => getData()}
+				refresh={() => getData(initSearch)}
 				success={success}
 				editor={editor}
 				setEditor={setEditor}
@@ -138,8 +165,43 @@ const ItemCategory = () => {
 						</button>
 					</div>
 					<hr className="my-4" />
+					<Card>
+						<Row>
+							<Col span={12} className="border-r">
+								<Row className="items-center">
+									<Col span="6">
+										<span>Category Name</span>
+									</Col>
+									<Col span={12}>
+										<Input
+											placeholder="Search category name"
+											name="category_name"
+											onChange={handleChangeSearch}
+											value={search.category_name}
+										/>
+									</Col>
+								</Row>
+							</Col>
+							<Col span={12}>
+								<div className="flex justify-end">
+									<button
+										className="btn btn-error btn-outline"
+										onClick={handleSearch(false)}
+									>
+										Reset
+									</button>
+									<button
+										className="ml-2 btn btn-success btn-outline"
+										onClick={handleSearch(true)}
+									>
+										Search
+									</button>
+								</div>
+							</Col>
+						</Row>
+					</Card>
 
-					<div className="mt-1 overflow-x-auto">
+					<div className="mt-4 overflow-x-auto">
 						<Table
 							dataSource={data || []}
 							columns={columns}
