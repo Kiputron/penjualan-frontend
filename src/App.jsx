@@ -8,7 +8,7 @@ function App() {
 		<Router>
 			<div className="flex">
 				<Sidebar />
-				<div className="flex-1 h-screen text-2xl font-semibold p-7">
+				<div className="flex-1 h-screen text-2xl font-semibold bg-white p-7">
 					<Routes>
 						{RouteList.map((el, index) => (
 							<Route

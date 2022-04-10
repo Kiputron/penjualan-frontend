@@ -10,7 +10,6 @@ const Sidebar = () => {
 	useEffect(() => {
 		setUrl(location.pathname);
 	}, [location]);
-	console.log("url", url);
 
 	return (
 		<div
