@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import RouteList from "../../routes";
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen }) => {
 	const [open, setOpen] = useState(true);
 	const location = useLocation(); // once ready it returns the 'window.location' object
 	const [url, setUrl] = useState(null);
@@ -15,7 +15,7 @@ const Sidebar = () => {
 		<div
 			className={`${
 				open ? "w-72" : "w-20"
-			} duration-300 h-screen bg-dark-purple relative p-5 pt-8`}
+			} duration-300 h-screen bg-dark-purple fixed p-5 pt-8 max-h-full`}
 		>
 			<img
 				src="/assets/control.png"
@@ -23,7 +23,10 @@ const Sidebar = () => {
 				className={`absolute border-2 rounded-full cursor-pointer -right-3 top-9 w-7 border-dark-purple ${
 					!open && "rotate-180"
 				}`}
-				onClick={() => setOpen(!open)}
+				onClick={() => {
+					isOpen(open);
+					setOpen(!open);
+				}}
 			/>
 			<div className="flex items-center gap-x-4">
 				<img
