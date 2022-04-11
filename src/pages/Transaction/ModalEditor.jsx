@@ -1,8 +1,9 @@
-import { Button, Col, Input, InputNumber, Modal, Row } from "antd";
+import { Button, Col, DatePicker, Input, InputNumber, Modal, Row } from "antd";
 import Select from "react-select";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import ModalError from "../../components/Sidebar/ModalError";
+import moment from "moment";
 
 const ModalEditor = ({
 	isOpen,
@@ -13,24 +14,25 @@ const ModalEditor = ({
 	setEditor,
 }) => {
 	const [loadingInsert, setLoadingInsert] = useState(false);
-	const [categoryOption, setCategoryOption] = useState([]);
+	const [itemOption, setItemOption] = useState([]);
 	const [error, setError] = useState([]);
 	const [modalError, setModalError] = useState(false);
 
-	const getCategory = async () => {
+	const getItem = async () => {
 		try {
 			const resp = await axios.get(
-				process.env.REACT_APP_SERVER_URL + "/api/v1.0/item-category/"
+				process.env.REACT_APP_SERVER_URL + "/api/v1.0/item/"
 			);
 
 			if (resp) {
 				const option = resp.data.data.rows.map((it, ix) => ({
 					value: it.id,
-					label: it.category_name,
-					name: "category_id",
+					label: it.item_name,
+					stock: it.qty,
+					name: "item_id",
 				}));
 
-				setCategoryOption(option);
+				setItemOption(option);
 			}
 		} catch (error) {
 			onError(error);
@@ -38,7 +40,7 @@ const ModalEditor = ({
 	};
 
 	useEffect(() => {
-		getCategory();
+		getItem();
 	}, [isOpen]);
 
 	const handleChange = (e) => {
@@ -48,34 +50,50 @@ const ModalEditor = ({
 		setEditor({
 			...editor,
 			[key]: value,
+			...(key === "item_id" && { stock: e.stock }),
 		});
 	};
 
 	const handleSave = async () => {
 		try {
+			const { stock, ...res } = editor;
 			setLoadingInsert(true);
 			if (editor?.id === 0) {
 				const resp = await axios.post(
-					process.env.REACT_APP_SERVER_URL + "/api/v1.0/item/",
-					editor
+					process.env.REACT_APP_SERVER_URL + "/api/v1.0/transaction/",
+					res
 				);
 
 				if (resp) {
 					refresh();
 					onClose();
-					setEditor({ id: 0, item_name: "", qty: null, category_id: 0 });
+					setEditor({
+						id: 0,
+						item_id: 0,
+						qty: null,
+						transaction_date: moment(),
+						stock: null,
+					});
 					success(resp.data.meta.message);
 				}
 			} else {
 				const resp = await axios.put(
-					process.env.REACT_APP_SERVER_URL + "/api/v1.0/item/" + editor.id,
-					editor
+					process.env.REACT_APP_SERVER_URL +
+						"/api/v1.0/transaction/" +
+						editor.id,
+					res
 				);
 
 				if (resp) {
 					refresh();
 					onClose();
-					setEditor({ id: 0, item_name: "", qty: null, category_id: 0 });
+					setEditor({
+						id: 0,
+						item_id: 0,
+						qty: null,
+						transaction_date: moment(),
+						stock: null,
+					});
 					success(resp.data.meta.message);
 				}
 			}
@@ -103,12 +121,18 @@ const ModalEditor = ({
 				handleClose={() => setModalError(false)}
 			/>
 			<Modal
-				title="Item Category Editor"
+				title="Transaction Editor"
 				visible={isOpen}
 				onOk={handleSave}
 				onCancel={() => {
 					onClose();
-					setEditor({ id: 0, item_name: "", qty: null, category_id: 0 });
+					setEditor({
+						id: 0,
+						item_id: 0,
+						qty: null,
+						transaction_date: moment(),
+						stock: null,
+					});
 				}}
 				footer={[
 					<Button disabled={loadingInsert} onClick={handleSave} type="primary">
@@ -118,29 +142,26 @@ const ModalEditor = ({
 			>
 				<Row className="mb-4">
 					<Col span={6}>
-						<span className="font-semibold ">Item Name</span>
-					</Col>
-					<Col span={18}>
-						<Input
-							value={editor.item_name}
-							onChange={handleChange}
-							name="item_name"
-							autoComplete="false"
-						/>
-					</Col>
-				</Row>
-
-				<Row className="mb-4">
-					<Col span={6}>
-						<span className="font-semibold ">Category</span>
+						<span className="font-semibold ">Item</span>
 					</Col>
 					<Col span={18}>
 						<Select
-							options={categoryOption}
+							options={itemOption}
 							onChange={handleChange}
-							value={categoryOption.filter(
-								(ix) => ix.value === editor.category_id
-							)}
+							value={itemOption.filter((ix) => ix.value === editor.item_id)}
+						/>
+					</Col>
+				</Row>
+				<Row className="mb-4">
+					<Col span={6}>
+						<span className="font-semibold ">Stock</span>
+					</Col>
+					<Col span={18}>
+						<Input
+							value={editor.stock}
+							name="stock"
+							autoComplete="false"
+							readOnly
 						/>
 					</Col>
 				</Row>
@@ -156,6 +177,19 @@ const ModalEditor = ({
 								setEditor({ ...editor, qty: val });
 							}}
 							name="qty"
+						/>
+					</Col>
+				</Row>
+				<Row className="mb-4">
+					<Col span={6}>
+						<span className="font-semibold ">Date</span>
+					</Col>
+					<Col span={18}>
+						<DatePicker
+							value={moment(editor.transaction_date)}
+							format={"DD-MM-YYYY"}
+							style={{ width: "100%" }}
+							onChange={(e) => setEditor({ ...editor, transaction_date: e })}
 						/>
 					</Col>
 				</Row>

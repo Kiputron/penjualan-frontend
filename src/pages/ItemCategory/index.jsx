@@ -1,7 +1,7 @@
 import { Card, Col, Input, message, Modal, Row, Table } from "antd";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { FaEdit, FaTrash, FaPlus, FaSearch, faClose } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import ModalEditor from "./ModalEditor";
 import ModalError from "../../components/Sidebar/ModalError";
@@ -29,11 +29,14 @@ const ItemCategory = () => {
 				process.env.REACT_APP_SERVER_URL +
 					`/api/v1.0/item-category?category_name=${filter.category_name}`
 			);
+			if (resp) {
+				setLoading(false);
+				setData(resp.data.data.rows);
+			}
 			setLoading(false);
-			setData(resp.data.data.rows);
 		} catch (error) {
-			onError(error);
 			setLoading(false);
+			onError(error.message);
 		}
 	};
 
@@ -96,8 +99,8 @@ const ItemCategory = () => {
 	};
 
 	const onError = (e, raw = false) => {
-		let errorArray = ["Error"];
-		if (e.data.errors) {
+		let errorArray = [e];
+		if (e?.data?.errors) {
 			errorArray = e.data.errors;
 		}
 		setError(errorArray);
@@ -151,7 +154,11 @@ const ItemCategory = () => {
 				editor={editor}
 				setEditor={setEditor}
 			/>
-			<ModalError visible={modalError} error={error} />
+			<ModalError
+				visible={modalError}
+				error={error}
+				handleClose={() => setModalError(!modalError)}
+			/>
 			{/* Content */}
 			<div className="bg-white rounded-md shadow-md card">
 				<div className="p-8">
@@ -172,7 +179,7 @@ const ItemCategory = () => {
 									<Col span="6">
 										<span>Category Name</span>
 									</Col>
-									<Col span={12}>
+									<Col span={17}>
 										<Input
 											placeholder="Search category name"
 											name="category_name"
@@ -183,20 +190,24 @@ const ItemCategory = () => {
 								</Row>
 							</Col>
 							<Col span={12}>
-								<div className="flex justify-end">
-									<button
-										className="btn btn-error btn-outline"
-										onClick={handleSearch(false)}
-									>
-										Reset
-									</button>
-									<button
-										className="ml-2 btn btn-success btn-outline"
-										onClick={handleSearch(true)}
-									>
-										Search
-									</button>
-								</div>
+								<Row className="flex justify-end">
+									<Col>
+										<div>
+											<button
+												className="btn btn-error btn-outline btn-sm"
+												onClick={handleSearch(false)}
+											>
+												Reset
+											</button>
+											<button
+												className="ml-2 btn btn-success btn-outline btn-sm"
+												onClick={handleSearch(true)}
+											>
+												Search
+											</button>
+										</div>
+									</Col>
+								</Row>
 							</Col>
 						</Row>
 					</Card>

@@ -56,15 +56,16 @@ const ModalEditor = ({
 				}
 			}
 		} catch (error) {
-			onError(error.response);
+			console.log(error);
+			onError(error?.response || error.message);
 		} finally {
 			setLoadingInsert(false);
 		}
 	};
 
 	const onError = (e, raw = false) => {
-		let errorArray = ["Error"];
-		if (e.data.errors) {
+		let errorArray = [e];
+		if (e?.data?.errors) {
 			errorArray = e.data.errors;
 		}
 		setError(errorArray);

@@ -25,14 +25,14 @@ const routeList = [
 	},
 	{
 		title: "Item",
-		src: "Chat",
+		src: "Folder",
 		gap: true,
 		path: "/item",
 		component: Item,
 	},
 	{
 		title: "Item Category",
-		src: "Chat",
+		src: "Folder",
 		path: "/item-category",
 		component: ItemCategory,
 	},

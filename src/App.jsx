@@ -10,8 +10,8 @@ function App() {
 		<Router>
 			<div
 				className={`grid ${
-					!openSidebar ? "grid-cols-[1fr,4fr]" : "grid-cols-[0.2fr,4fr]"
-				} transition duration-200 `}
+					!openSidebar ? "grid-cols-[1fr,3.7fr]" : "grid-cols-[0.2fr,3fr]"
+				}  `}
 			>
 				<Sidebar
 					isOpen={(val) => {

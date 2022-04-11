@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import ModalEditor from "./ModalEditor";
+import ModalError from "../../components/Sidebar/ModalError";
 
 const initSearch = {
 	item_name: "",
@@ -31,11 +32,14 @@ const Item = () => {
 				process.env.REACT_APP_SERVER_URL +
 					`/api/v1.0/item?item_name=${filter.item_name}&category_name=${filter.category_name}`
 			);
+			if (resp) {
+				setData(resp.data.data.rows);
+				setLoading(false);
+			}
 			setLoading(false);
-			setData(resp.data.data.rows);
 		} catch (error) {
-			onError(error);
 			setLoading(false);
+			onError(error.message);
 		}
 	};
 
@@ -49,7 +53,7 @@ const Item = () => {
 				success(resp.data.meta.message);
 			}
 		} catch (error) {
-			onError(error);
+			onError(error.response);
 		}
 	};
 
@@ -98,8 +102,8 @@ const Item = () => {
 	};
 
 	const onError = (e, raw = false) => {
-		let errorArray = ["Error"];
-		if (e.data.errors) {
+		let errorArray = [e];
+		if (e?.data?.errors) {
 			errorArray = e.data.errors;
 		}
 		setError(errorArray);
@@ -165,6 +169,11 @@ const Item = () => {
 				editor={editor}
 				setEditor={setEditor}
 			/>
+			<ModalError
+				visible={modalError}
+				error={error}
+				handleClose={() => setModalError(!modalError)}
+			/>
 			{/* Content */}
 			<div className="bg-white rounded-md shadow-md card">
 				<div className="p-8">
@@ -185,7 +194,7 @@ const Item = () => {
 									<Col span="6">
 										<span>Item Name</span>
 									</Col>
-									<Col span={12}>
+									<Col span={17}>
 										<Input
 											placeholder="Search item name"
 											name="item_name"
@@ -198,7 +207,7 @@ const Item = () => {
 									<Col span="6">
 										<span>Category Name</span>
 									</Col>
-									<Col span={12}>
+									<Col span={17}>
 										<Input
 											placeholder="Search category name"
 											name="category_name"
@@ -209,20 +218,24 @@ const Item = () => {
 								</Row>
 							</Col>
 							<Col span={12}>
-								<div className="flex justify-end">
-									<button
-										className="btn btn-error btn-outline"
-										onClick={handleSearch(false)}
-									>
-										Reset
-									</button>
-									<button
-										className="ml-2 btn btn-success btn-outline"
-										onClick={handleSearch(true)}
-									>
-										Search
-									</button>
-								</div>
+								<Row className="flex justify-end">
+									<Col>
+										<div>
+											<button
+												className="btn btn-error btn-outline btn-sm"
+												onClick={handleSearch(false)}
+											>
+												Reset
+											</button>
+											<button
+												className="ml-2 btn btn-success btn-outline btn-sm"
+												onClick={handleSearch(true)}
+											>
+												Search
+											</button>
+										</div>
+									</Col>
+								</Row>
 							</Col>
 						</Row>
 					</Card>
